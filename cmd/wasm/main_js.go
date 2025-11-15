@@ -96,10 +96,6 @@ var rdDialer = func(ctx context.Context, network, address string) (net.Conn, err
 	}
 	address = unicodeAddr
 
-	if leaseID != "" {
-		address = leaseID
-	}
-
 	log.Debug().Str("original_addr", originalAddr).Str("final_addr", address).Msg("[Dialer] Attempting dial")
 	cred := sdk.NewCredential()
 	conn, err := rdClient.Dial(cred, address, "http/1.1")
@@ -185,10 +181,9 @@ func (m *WebSocketManager) CreateConnection(uri string, protocols []string) (*WS
 	if err != nil {
 		return nil, "", err
 	}
-	id := getLeaseID(u.Hostname())
 
 	u.Scheme = "ws"
-	u.Host = id
+	u.Host = leaseID
 
 	// Parse URL to extract host for rdDialer
 	dialer := websocket.Dialer{
@@ -360,32 +355,6 @@ func IsHTMLContentType(contentType string) bool {
 	return mediaType == "text/html"
 }
 
-func getLeaseID(hostname string) string {
-	if leaseID != "" {
-		return leaseID
-	}
-
-	// First, decode URL-encoded characters (e.g., %ED%8E%98%EC%9D%B8%ED%8A%B8 -> 페인트)
-	decoded, err := url.QueryUnescape(hostname)
-	if err != nil {
-		decoded = hostname
-	}
-
-	// Normalize punycode to lowercase before conversion (punycode is case-insensitive)
-	decoded = strings.ToLower(decoded)
-
-	// Then, convert punycode to unicode (e.g., xn--v9jub -> 日本語)
-	host, err := idna.ToUnicode(decoded)
-	if err != nil {
-		host = decoded
-	}
-
-	id := strings.Split(host, ".")[0]
-	id = strings.TrimSpace(id)
-	id = strings.ToUpper(id)
-	return id
-}
-
 func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Handle WebSocket polyfill endpoints
 	if strings.HasPrefix(r.URL.Path, "/sw-cgi/websocket/") {
@@ -398,9 +367,8 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	r = r.Clone(context.Background())
 
 	// Decode hostname properly for IDN domains
-	decodedHost := getLeaseID(r.URL.Hostname())
-	r.URL.Host = decodedHost
 	r.URL.Scheme = "http"
+	r.URL.Host = leaseID
 
 	resp, err := client.Do(r)
 	if err != nil {
@@ -639,24 +607,6 @@ func handleSDKConnect(data js.Value) {
 				log.Error().Interface("panic", r).Str("clientId", clientId).Msg("[SDK Connect] Goroutine recovered from panic")
 			}
 		}()
-		// Convert leaseName (may be punycode) to uppercase unicode
-		normalizedLeaseName := getLeaseID(leaseName)
-		log.Debug().Str("original", leaseName).Str("normalized", normalizedLeaseName).Msg("[SDK Connect] Normalized lease name")
-
-		// Lookup lease by name to get lease ID
-		lease, err := rdClient.LookupName(normalizedLeaseName)
-		if err != nil {
-			log.Error().Err(err).Str("leaseName", leaseName).Msg("[SDK Connect] Lease lookup failed")
-			js.Global().Call("__sdk_post_message", map[string]interface{}{
-				"type":     "SDK_CONNECT_ERROR",
-				"clientId": clientId,
-				"error":    err.Error(),
-			})
-			return
-		}
-
-		leaseID := lease.GetIdentity().GetId()
-		log.Info().Str("leaseName", leaseName).Str("leaseID", leaseID).Msg("[SDK Connect] Lease found")
 
 		// Create E2EE connection using SDK with lease ID
 		cred := sdk.NewCredential()

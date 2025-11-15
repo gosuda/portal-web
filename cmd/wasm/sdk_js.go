@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"gosuda.org/portal/cmd/webclient/wsjs"
+	"gosuda.org/portal-web/internal/wsjs"
 )
 
 // WebSocketDialerJS creates a WebSocket dialer function for JavaScript/WebAssembly environment
