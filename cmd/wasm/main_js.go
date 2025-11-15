@@ -23,7 +23,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/net/idna"
-	"gosuda.org/portal-web/httpjs"
+	"gosuda.org/portal-web/internal/httpjs"
 	"gosuda.org/portal/sdk"
 )
 
@@ -33,6 +33,8 @@ var (
 	// SDK connection manager for Service Worker messaging
 	sdkConnections   = make(map[string]io.ReadWriteCloser)
 	sdkConnectionsMu sync.RWMutex
+
+	leaseID string
 )
 
 // getBootstrapServers retrieves bootstrap servers from global JavaScript variable
@@ -94,12 +96,8 @@ var rdDialer = func(ctx context.Context, network, address string) (net.Conn, err
 	}
 	address = unicodeAddr
 
-	lease, err := rdClient.LookupName(address)
-	if err == nil && lease != nil {
-		log.Debug().Str("name", address).Str("id", lease.Identity.Id).Msg("[Dialer] Found lease")
-		address = lease.Identity.Id
-	} else {
-		log.Debug().Err(err).Str("name", address).Msg("[Dialer] Lease lookup failed")
+	if leaseID != "" {
+		address = leaseID
 	}
 
 	log.Debug().Str("original_addr", originalAddr).Str("final_addr", address).Msg("[Dialer] Attempting dial")
@@ -363,6 +361,10 @@ func IsHTMLContentType(contentType string) bool {
 }
 
 func getLeaseID(hostname string) string {
+	if leaseID != "" {
+		return leaseID
+	}
+
 	// First, decode URL-encoded characters (e.g., %ED%8E%98%EC%9D%B8%ED%8A%B8 -> 페인트)
 	decoded, err := url.QueryUnescape(hostname)
 	if err != nil {
@@ -843,6 +845,9 @@ func handleSDKClose(data js.Value) {
 func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339})
 	var err error
+
+	// Override if LEASE_ID is set
+	leaseID = os.Getenv("LEASE_ID")
 
 	// Get bootstrap servers from global JavaScript variable
 	bootstrapServerList := getBootstrapServers()

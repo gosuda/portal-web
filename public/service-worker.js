@@ -3,10 +3,7 @@ let BASE_PATH = "<PORTAL_UI_URL>";
 let wasmManifestString = '"<WASM_MANIFEST>"';
 let wasmManifest = JSON.parse(wasmManifestString);
 
-let wasm_exec_URL = BASE_PATH + "/frontend/wasm_exec.js";
-if (new URL(BASE_PATH).protocol === "http:") {
-  wasm_exec_URL = "/frontend/wasm_exec.js";
-}
+let wasm_exec_URL = BASE_PATH + "/_static/wasm_exec.js";
 importScripts(wasm_exec_URL);
 
 let loading = false;
