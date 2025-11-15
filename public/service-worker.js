@@ -6,7 +6,7 @@ let wasmManifest = {
 
 let wasm_exec_URL = "/wasm_exec.js";
 importScripts(wasm_exec_URL);
-self.__BOOTSTRAP_SERVERS__ = wasmManifest;
+self.__BOOTSTRAP_SERVERS__ = wasmManifest.bootstraps;
 
 let loading = false;
 let initError = null;
