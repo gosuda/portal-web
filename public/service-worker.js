@@ -1,10 +1,12 @@
-//const wasm_exec_URL = "https://cdn.jsdelivr.net/gh/golang/go@go1.25.3/lib/wasm/wasm_exec.js";
-let BASE_PATH = "<PORTAL_UI_URL>";
-let wasmManifestString = '"<WASM_MANIFEST>"';
-let wasmManifest = JSON.parse(wasmManifestString);
+let wasmManifest = {
+  bootstraps: "",
+  wasmUrl: "/_static/portal.wasm",
+  leaseID: "",
+};
 
-let wasm_exec_URL = BASE_PATH + "/_static/wasm_exec.js";
+let wasm_exec_URL = "/wasm_exec.js";
 importScripts(wasm_exec_URL);
+self.__BOOTSTRAP_SERVERS__ = wasmManifest;
 
 let loading = false;
 let initError = null;
@@ -56,14 +58,10 @@ async function runWASM() {
   try {
     const manifest = await fetchManifest();
     // Use unified cache path from manifest (full URL)
-    let wasm_URL;
-    if (manifest.wasmUrl && new URL(manifest.wasmUrl).protocol !== "http:") {
-      wasm_URL = manifest.wasmUrl;
-    } else {
-      wasm_URL = `/frontend/${manifest.wasmFile}`;
-    }
+    let wasm_URL = manifest.wasmUrl;
 
     const go = new Go();
+    go.env["LEASE_ID"] = manifest.leaseID;
 
     const response = await fetch(wasm_URL);
     if (!response.ok) {
