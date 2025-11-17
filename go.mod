@@ -6,7 +6,7 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/rs/zerolog v1.34.0
 	golang.org/x/net v0.47.0
-	gosuda.org/portal v1.4.3
+	gosuda.org/portal v1.4.4
 )
 
 require (

@@ -377,12 +377,7 @@ async function runWASM() {
     const manifest = await loadManifest();
 
     // Determine WASM URL from manifest
-    let wasm_URL;
-    if (manifest.wasmUrl && new URL(manifest.wasmUrl).protocol !== "http:") {
-      wasm_URL = manifest.wasmUrl;
-    } else {
-      wasm_URL = `/frontend/${manifest.wasmFile}`;
-    }
+    let wasm_URL = manifest.wasmUrl;
     debugLog("[SW] WASM URL:", wasm_URL);
 
     // Create Go runtime
