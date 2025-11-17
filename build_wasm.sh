@@ -15,9 +15,9 @@ DIST_DIR="${ROOT_DIR}/dist"
 STATIC_DIR="${DIST_DIR}/_static"
 
 # Default values for wasmManifest (can be overridden via env)
-DEFAULT_BOOTSTRAPS='wss://portal.gosuda.org/relay,wss://portal.thumbgo.kr/relay'
+DEFAULT_BOOTSTRAPS='wss://portal.gosuda.org/relay,wss://portal.thumbgo.kr/relay,wss://portal.iwanhae.kr/relay,wss://portal.lmmt.eu.org/relay'
 DEFAULT_WASM_URL='/_static/portal.wasm'
-DEFAULT_LEASE_ID='PRLSOCK6A6NMWUWAI5V76E3G2Y'
+DEFAULT_LEASE_ID='HXLAFMYCASEISRUSWXUIO3M72A'
 
 BOOTSTRAPS="${BOOTSTRAPS:-$DEFAULT_BOOTSTRAPS}"
 WASM_URL="${WASM_URL:-$DEFAULT_WASM_URL}"
